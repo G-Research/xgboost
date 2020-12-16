@@ -11,6 +11,7 @@
 
 #include "xgboost/data.h"
 #include "xgboost/c_api.h"
+#include "xgboost/logging.h"
 
 #include "simple_dmatrix.h"
 #include "./simple_batch_iterator.h"
@@ -122,6 +123,11 @@ SimpleDMatrix::SimpleDMatrix(AdapterT* adapter, float missing, int nthread) {
       weights.insert(weights.end(), batch.Weights(),
                      batch.Weights() + batch.Size());
     }
+    if (batch.SubsampleGroups() != nullptr) {
+      auto& subsample_groups = info_.subsample_groups_.HostVector();
+      subsample_groups.insert(subsample_groups.end(), batch.SubsampleGroups(),
+                              batch.SubsampleGroups() + batch.Size());
+    }
     if (batch.BaseMargin() != nullptr) {
       auto& base_margin = info_.base_margin_.HostVector();
       base_margin.insert(base_margin.end(), batch.BaseMargin(),
@@ -141,6 +147,8 @@ SimpleDMatrix::SimpleDMatrix(AdapterT* adapter, float missing, int nthread) {
     }
   }
 
+  info_.ResetUniqueSubsampleGroups();
+
   if (last_group_id != default_max) {
     if (group_size > info_.group_ptr_.back()) {
       info_.group_ptr_.push_back(group_size);
@@ -153,7 +161,6 @@ SimpleDMatrix::SimpleDMatrix(AdapterT* adapter, float missing, int nthread) {
   } else {
     info_.num_col_ = adapter->NumColumns();
   }
-
 
   // Synchronise worker columns
   rabit::Allreduce<rabit::op::Max>(&info_.num_col_, 1);

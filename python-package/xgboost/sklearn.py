@@ -220,6 +220,7 @@ def _wrap_evaluation_matrices(
     qid: Optional[Any],
     sample_weight: Optional[Any],
     base_margin: Optional[Any],
+    subsample_group: Optional[Any],
     feature_weights: Optional[Any],
     eval_set: Optional[List[Tuple[Any, Any]]],
     sample_weight_eval_set: Optional[List[Any]],
@@ -239,6 +240,7 @@ def _wrap_evaluation_matrices(
         qid=qid,
         weight=sample_weight,
         base_margin=base_margin,
+        subsample_group=subsample_group,
         feature_weights=feature_weights,
         missing=missing,
     )
@@ -623,6 +625,7 @@ class XGBModel(XGBModelBase):
         *,
         sample_weight=None,
         base_margin=None,
+        subsample_group=None,
         eval_set=None,
         eval_metric=None,
         early_stopping_rounds=None,
@@ -650,6 +653,8 @@ class XGBModel(XGBModelBase):
             instance weights
         base_margin : array_like
             global bias for each instance.
+        subsample_group : array_like
+            instance subsample group
         eval_set : list, optional
             A list of (X, y) tuple pairs to use as validation sets, for which
             metrics will be computed.
@@ -713,6 +718,7 @@ class XGBModel(XGBModelBase):
             qid=None,
             sample_weight=sample_weight,
             base_margin=base_margin,
+            subsample_group=subsample_group,
             feature_weights=feature_weights,
             eval_set=eval_set,
             sample_weight_eval_set=sample_weight_eval_set,
@@ -1016,6 +1022,7 @@ class XGBClassifier(XGBModel, XGBClassifierBase):
         *,
         sample_weight=None,
         base_margin=None,
+        subsample_group=None,
         eval_set=None,
         eval_metric=None,
         early_stopping_rounds=None,
@@ -1114,6 +1121,7 @@ class XGBClassifier(XGBModel, XGBClassifierBase):
             qid=None,
             sample_weight=sample_weight,
             base_margin=base_margin,
+            subsample_group=subsample_group,
             feature_weights=feature_weights,
             eval_set=eval_set,
             sample_weight_eval_set=sample_weight_eval_set,
@@ -1390,6 +1398,7 @@ class XGBRanker(XGBModel, XGBRankerMixIn):
         qid=None,
         sample_weight=None,
         base_margin=None,
+        subsample_group=None,
         eval_set=None,
         eval_group=None,
         eval_qid=None,
@@ -1433,6 +1442,8 @@ class XGBRanker(XGBModel, XGBRankerMixIn):
                 to individual data points.
         base_margin : array_like
             Global bias for each instance.
+        subsample_group : array_like
+            Subsample group for each instance
         eval_set : list, optional
             A list of (X, y) tuple pairs to use as validation sets, for which
             metrics will be computed.
@@ -1510,6 +1521,7 @@ class XGBRanker(XGBModel, XGBRankerMixIn):
             qid=qid,
             sample_weight=sample_weight,
             base_margin=base_margin,
+            subsample_group=subsample_group,
             feature_weights=feature_weights,
             eval_set=eval_set,
             sample_weight_eval_set=sample_weight_eval_set,
