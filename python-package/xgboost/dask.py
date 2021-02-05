@@ -222,6 +222,7 @@ class DaskDMatrix:
         label_lower_bound: Optional[_DaskCollection] = None,
         label_upper_bound: Optional[_DaskCollection] = None,
         feature_weights: Optional[_DaskCollection] = None,
+        subsample_group: Optional[_DaskCollection] = None,
         enable_categorical: bool = False
     ) -> None:
         _assert_dask_support()
@@ -264,6 +265,7 @@ class DaskDMatrix:
             base_margin=base_margin,
             qid=qid,
             feature_weights=feature_weights,
+            subsample_group=subsample_group,
             label_lower_bound=label_lower_bound,
             label_upper_bound=label_upper_bound,
         )
@@ -280,6 +282,7 @@ class DaskDMatrix:
         base_margin: Optional[_DaskCollection] = None,
         qid: Optional[_DaskCollection] = None,
         feature_weights: Optional[_DaskCollection] = None,
+        subsample_group: Optional[_DaskCollection] = None,
         label_lower_bound: Optional[_DaskCollection] = None,
         label_upper_bound: Optional[_DaskCollection] = None
     ) -> "DaskDMatrix":
@@ -388,6 +391,11 @@ class DaskDMatrix:
         else:
             self.feature_weights = await client.compute(feature_weights).result()
 
+        if subsample_group is None:
+            self.subsample_group = None
+        else:
+            self.subsample_group = await client.compute(subsample_group).result()
+
         return self
 
     def create_fn_args(self, worker_addr: str) -> Dict[str, Any]:
@@ -398,6 +406,7 @@ class DaskDMatrix:
         return {'feature_names': self.feature_names,
                 'feature_types': self.feature_types,
                 'feature_weights': self.feature_weights,
+                'subsample_group': self.subsample_group,
                 'meta_names': self.meta_names,
                 'missing': self.missing,
                 'parts': self.worker_map.get(worker_addr, None),
@@ -598,6 +607,7 @@ class DaskDeviceQuantileDMatrix(DaskDMatrix):
         label_lower_bound: Optional[_DaskCollection] = None,
         label_upper_bound: Optional[_DaskCollection] = None,
         feature_weights: Optional[_DaskCollection] = None,
+        subsample_group: Optional[_DaskCollection] = None,
         enable_categorical: bool = False,
     ) -> None:
         super().__init__(
@@ -613,6 +623,7 @@ class DaskDeviceQuantileDMatrix(DaskDMatrix):
             missing=missing,
             silent=silent,
             feature_weights=feature_weights,
+            subsample_group=subsample_group,
             feature_names=feature_names,
             feature_types=feature_types,
             enable_categorical=enable_categorical,
@@ -630,6 +641,7 @@ def _create_device_quantile_dmatrix(
     feature_names: Optional[Union[str, List[str]]],
     feature_types: Optional[Union[Any, List[Any]]],
     feature_weights: Optional[Any],
+    subsample_group: Optional[Any],
     meta_names: List[str],
     missing: float,
     parts: Optional[_DataParts],
@@ -677,6 +689,7 @@ def _create_device_quantile_dmatrix(
         max_bin=max_bin,
     )
     dmatrix.set_info(feature_weights=feature_weights)
+    dmatrix.set_info(subsample_group=subsample_group)
     return dmatrix
 
 
@@ -684,6 +697,7 @@ def _create_dmatrix(
     feature_names: Optional[Union[str, List[str]]],
     feature_types: Optional[Union[Any, List[Any]]],
     feature_weights: Optional[Any],
+    subsample_group: Optional[Any],
     meta_names: List[str],
     missing: float,
     parts: Optional[_DataParts]
@@ -738,6 +752,7 @@ def _create_dmatrix(
         label_lower_bound=_label_lower_bound,
         label_upper_bound=_label_upper_bound,
         feature_weights=feature_weights,
+        subsample_group=subsample_group,
     )
     return dmatrix
 
@@ -1395,6 +1410,7 @@ class DaskXGBRegressor(DaskScikitLearnBase, XGBRegressorBase):
         verbose: bool,
         xgb_model: Optional[Union[Booster, XGBModel]],
         feature_weights: Optional[_DaskCollection],
+        subsample_group: Optional[_DaskCollection],
         callbacks: Optional[List[TrainingCallback]],
     ) -> _DaskCollection:
         params = self.get_xgb_params()
@@ -1407,6 +1423,7 @@ class DaskXGBRegressor(DaskScikitLearnBase, XGBRegressorBase):
             sample_weight=sample_weight,
             base_margin=base_margin,
             feature_weights=feature_weights,
+            subsample_group=subsample_group,
             eval_set=eval_set,
             sample_weight_eval_set=sample_weight_eval_set,
             base_margin_eval_set=base_margin_eval_set,
@@ -1457,6 +1474,7 @@ class DaskXGBRegressor(DaskScikitLearnBase, XGBRegressorBase):
         sample_weight_eval_set: Optional[List[_DaskCollection]] = None,
         base_margin_eval_set: Optional[List[_DaskCollection]] = None,
         feature_weights: Optional[_DaskCollection] = None,
+        subsample_group: Optional[_DaskCollection] = None,
         callbacks: Optional[List[TrainingCallback]] = None
     ) -> "DaskXGBRegressor":
         _assert_dask_support()
@@ -1481,6 +1499,7 @@ class DaskXGBClassifier(DaskScikitLearnBase, XGBClassifierBase):
         verbose: bool,
         xgb_model: Optional[Union[Booster, XGBModel]],
         feature_weights: Optional[_DaskCollection],
+        subsample_group: Optional[_DaskCollection],
         callbacks: Optional[List[TrainingCallback]]
     ) -> "DaskXGBClassifier":
         params = self.get_xgb_params()
@@ -1493,6 +1512,7 @@ class DaskXGBClassifier(DaskScikitLearnBase, XGBClassifierBase):
             sample_weight=sample_weight,
             base_margin=base_margin,
             feature_weights=feature_weights,
+            subsample_group=subsample_group,
             eval_set=eval_set,
             sample_weight_eval_set=sample_weight_eval_set,
             base_margin_eval_set=base_margin_eval_set,
@@ -1562,6 +1582,7 @@ class DaskXGBClassifier(DaskScikitLearnBase, XGBClassifierBase):
         sample_weight_eval_set: Optional[List[_DaskCollection]] = None,
         base_margin_eval_set: Optional[List[_DaskCollection]] = None,
         feature_weights: Optional[_DaskCollection] = None,
+        subsample_group: Optional[_DaskCollection] = None,
         callbacks: Optional[List[TrainingCallback]] = None
     ) -> "DaskXGBClassifier":
         _assert_dask_support()
@@ -1661,6 +1682,7 @@ class DaskXGBRanker(DaskScikitLearnBase, XGBRankerMixIn):
         verbose: bool,
         xgb_model: Optional[Union[XGBModel, Booster]],
         feature_weights: Optional[_DaskCollection],
+        subsample_group: Optional[_DaskCollection],
         callbacks: Optional[List[TrainingCallback]],
     ) -> "DaskXGBRanker":
         msg = "Use `qid` instead of `group` on dask interface."
@@ -1678,6 +1700,7 @@ class DaskXGBRanker(DaskScikitLearnBase, XGBRankerMixIn):
             sample_weight=sample_weight,
             base_margin=base_margin,
             feature_weights=feature_weights,
+            subsample_group=subsample_group,
             eval_set=eval_set,
             sample_weight_eval_set=sample_weight_eval_set,
             base_margin_eval_set=base_margin_eval_set,
@@ -1730,6 +1753,7 @@ class DaskXGBRanker(DaskScikitLearnBase, XGBRankerMixIn):
         sample_weight_eval_set: Optional[List[_DaskCollection]] = None,
         base_margin_eval_set: Optional[List[_DaskCollection]] = None,
         feature_weights: Optional[_DaskCollection] = None,
+        subsample_group: Optional[_DaskCollection] = None,
         callbacks: Optional[List[TrainingCallback]] = None
     ) -> "DaskXGBRanker":
         _assert_dask_support()
